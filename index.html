@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jet Shooting Game</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="ui-overlay">
+            <!-- Start Screen -->
+            <div id="start-screen" class="screen">
+                <h1>JET SHOOTER</h1>
+                <p class="instructions">
+                    WASD / Arrow Keys - Move<br>
+                    Spacebar / Click - Shoot<br>
+                    P / Escape - Pause
+                </p>
+                <button id="start-button" class="menu-button">START GAME</button>
+            </div>
+
+            <!-- Pause Screen -->
+            <div id="pause-screen" class="screen hidden">
+                <h2>PAUSED</h2>
+                <button id="resume-button" class="menu-button">RESUME</button>
+                <button id="quit-button" class="menu-button">QUIT TO MENU</button>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="gameover-screen" class="screen hidden">
+                <h2>GAME OVER</h2>
+                <p id="final-score">Score: 0</p>
+                <p id="high-score">High Score: 0</p>
+                <button id="restart-button" class="menu-button">PLAY AGAIN</button>
+                <button id="menu-button" class="menu-button">MAIN MENU</button>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="hud-left">
+                <div id="health-container">
+                    <span>HP</span>
+                    <div id="health-bar">
+                        <div id="health-fill"></div>
+                    </div>
+                </div>
+                <div id="lives-container">
+                    <span>LIVES:</span>
+                    <span id="lives-display">3</span>
+                </div>
+            </div>
+            <div id="hud-center">
+                <div id="score-display">SCORE: 0</div>
+            </div>
+            <div id="hud-right">
+                <div id="powerup-display"></div>
+            </div>
+        </div>
+
+        <!-- Boss Health Bar -->
+        <div id="boss-health-container" class="hidden">
+            <span id="boss-name">BOSS</span>
+            <div id="boss-health-bar">
+                <div id="boss-health-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

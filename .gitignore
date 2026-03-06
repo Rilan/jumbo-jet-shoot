@@ -1,0 +1,35 @@
+# Claude Code
+.claude/
+
+# Empty assets folder
+assets/
+
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# Build output
+dist/
+build/
+
+# Temp files
+*.tmp
+*.temp

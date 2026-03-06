@@ -1,0 +1,267 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #0a0a0f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    width: 800px;
+    height: 600px;
+}
+
+#game-canvas {
+    display: block;
+    background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
+    border: 2px solid #333;
+    border-radius: 4px;
+}
+
+/* UI Overlay */
+#ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.85);
+    pointer-events: auto;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+.screen h1 {
+    font-size: 4rem;
+    color: #00ffff;
+    text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+    margin-bottom: 30px;
+    letter-spacing: 8px;
+}
+
+.screen h2 {
+    font-size: 3rem;
+    color: #ffcc00;
+    text-shadow: 0 0 15px #ffcc00;
+    margin-bottom: 30px;
+}
+
+.instructions {
+    color: #aaa;
+    text-align: center;
+    line-height: 2;
+    margin-bottom: 40px;
+    font-size: 1.1rem;
+}
+
+.menu-button {
+    background: linear-gradient(to bottom, #333, #222);
+    border: 2px solid #00ffff;
+    color: #00ffff;
+    padding: 15px 50px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin: 10px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.menu-button:hover {
+    background: #00ffff;
+    color: #000;
+    box-shadow: 0 0 20px #00ffff;
+}
+
+#final-score, #high-score {
+    color: #fff;
+    font-size: 1.5rem;
+    margin: 10px;
+}
+
+#high-score {
+    color: #ffcc00;
+}
+
+/* HUD */
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+}
+
+#hud.hidden {
+    display: none;
+}
+
+#hud-left, #hud-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#hud-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#health-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#health-container span {
+    color: #ff4444;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+#health-bar {
+    width: 150px;
+    height: 20px;
+    background: #333;
+    border: 2px solid #666;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#health-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #ff6666, #ff3333);
+    transition: width 0.3s ease;
+}
+
+#lives-container {
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+#lives-display {
+    color: #00ff00;
+    font-weight: bold;
+}
+
+#score-display {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+#powerup-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.powerup-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+.powerup-indicator .icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+}
+
+.powerup-indicator .timer {
+    color: #fff;
+    min-width: 30px;
+}
+
+/* Boss Health Bar */
+#boss-health-container {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+#boss-health-container.hidden {
+    display: none;
+}
+
+#boss-name {
+    color: #ff3333;
+    font-size: 1rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px #ff3333;
+}
+
+#boss-health-bar {
+    width: 400px;
+    height: 15px;
+    background: #333;
+    border: 2px solid #ff3333;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#boss-health-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #ff6666, #cc0000);
+    transition: width 0.2s ease;
+}
+
+/* Responsive */
+@media (max-width: 850px) {
+    #game-container {
+        width: 100vw;
+        height: 75vw;
+        max-height: 100vh;
+    }
+
+    .screen h1 {
+        font-size: 2.5rem;
+    }
+
+    .screen h2 {
+        font-size: 2rem;
+    }
+}

@@ -1,7 +1,7 @@
 import { KEYS } from '../utils/Constants.js';
 
 /**
- * Handles keyboard and mouse input
+ * Handles keyboard, mouse, and touch input
  */
 export class InputManager {
     constructor() {
@@ -15,7 +15,19 @@ export class InputManager {
         };
         this.canvas = null;
 
+        // Touch input state (from TouchController)
+        this.touchDirection = { x: 0, y: 0 };
+        this.touchFiring = false;
+        this.touchController = null;
+
         this.setupListeners();
+    }
+
+    /**
+     * Set touch controller reference
+     */
+    setTouchController(touchController) {
+        this.touchController = touchController;
     }
 
     /**
@@ -145,19 +157,29 @@ export class InputManager {
     }
 
     /**
-     * Get movement direction vector
+     * Get movement direction vector (combines keyboard and touch input)
      */
     getMovementDirection() {
         let x = 0;
         let y = 0;
 
+        // Keyboard input
         if (this.isKeyHeld(KEYS.LEFT)) x -= 1;
         if (this.isKeyHeld(KEYS.RIGHT)) x += 1;
         if (this.isKeyHeld(KEYS.UP)) y -= 1;
         if (this.isKeyHeld(KEYS.DOWN)) y += 1;
 
-        // Normalize diagonal movement
-        if (x !== 0 && y !== 0) {
+        // Touch input (from TouchController)
+        if (this.touchController && this.touchController.isActive()) {
+            const touchDir = this.touchController.getDirection();
+            if (touchDir.x !== 0 || touchDir.y !== 0) {
+                x = touchDir.x;
+                y = touchDir.y;
+            }
+        }
+
+        // Normalize diagonal movement (only for keyboard input)
+        if (x !== 0 && y !== 0 && !this.touchController?.isActive()) {
             const length = Math.sqrt(x * x + y * y);
             x /= length;
             y /= length;
@@ -167,10 +189,12 @@ export class InputManager {
     }
 
     /**
-     * Check if shooting input is active
+     * Check if shooting input is active (keyboard, mouse, or touch)
      */
     isShooting() {
-        return this.isKeyHeld(KEYS.SHOOT) || this.mouse.down;
+        // Check touch controller fire button
+        const touchFiring = this.touchController && this.touchController.isFiring();
+        return this.isKeyHeld(KEYS.SHOOT) || this.mouse.down || touchFiring;
     }
 
     /**

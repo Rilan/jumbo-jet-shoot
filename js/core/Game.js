@@ -4,6 +4,8 @@ import { InputManager } from './InputManager.js';
 import { CollisionManager } from './CollisionManager.js';
 import { SpawnManager } from './SpawnManager.js';
 import { UIManager } from '../ui/UIManager.js';
+import { TouchController } from './TouchController.js';
+import { AudioManager } from './AudioManager.js';
 import { CANVAS, GAME_STATES, PLAYER, ENEMIES, COLORS, EFFECTS } from '../utils/Constants.js';
 
 /**
@@ -24,6 +26,14 @@ export class Game {
         this.collisionManager = new CollisionManager();
         this.spawnManager = new SpawnManager();
         this.uiManager = new UIManager();
+
+        // Touch controls
+        this.touchController = new TouchController();
+        this.touchController.init();
+        this.inputManager.setTouchController(this.touchController);
+
+        // Audio
+        this.audioManager = new AudioManager();
 
         // Game state
         this.state = GAME_STATES.MENU;
@@ -72,6 +82,9 @@ export class Game {
         this.uiManager.setCallback('quit', () => this.quitToMenu());
         this.uiManager.setCallback('restart', () => this.startGame());
         this.uiManager.setCallback('menu', () => this.quitToMenu());
+
+        // Provide audio manager to UI
+        this.uiManager.setAudioManager(this.audioManager);
     }
 
     /**
@@ -96,6 +109,11 @@ export class Game {
         // Show game UI
         this.uiManager.showScreen('game');
         this.uiManager.hideBossHealth();
+
+        // Initialize and start audio
+        this.audioManager.init();
+        this.audioManager.resume();
+        this.audioManager.startMusic();
     }
 
     /**
@@ -105,6 +123,7 @@ export class Game {
         if (this.state === GAME_STATES.PLAYING) {
             this.state = GAME_STATES.PAUSED;
             this.uiManager.showScreen('pause');
+            this.audioManager.pauseMusic();
         }
     }
 
@@ -115,6 +134,7 @@ export class Game {
         if (this.state === GAME_STATES.PAUSED) {
             this.state = GAME_STATES.PLAYING;
             this.uiManager.showScreen('game');
+            this.audioManager.resumeMusic();
         }
     }
 
@@ -125,6 +145,7 @@ export class Game {
         this.state = GAME_STATES.MENU;
         this.uiManager.showScreen('start');
         this.uiManager.hideBossHealth();
+        this.audioManager.stopMusic();
     }
 
     /**
@@ -133,6 +154,8 @@ export class Game {
     gameOver() {
         this.state = GAME_STATES.GAME_OVER;
         this.uiManager.showGameOver(this.score);
+        this.audioManager.stopMusic();
+        this.audioManager.playGameOver();
     }
 
     /**
@@ -209,6 +232,7 @@ export class Game {
         }
 
         this.player.shoot();
+        this.audioManager.playShoot();
     }
 
     /**
@@ -329,6 +353,9 @@ export class Game {
         this.screenShake.intensity = 15;
         this.screenShake.duration = 0.5;
 
+        // Boss explosion sound
+        this.audioManager.playBossDestroyed();
+
         // Drop multiple power-ups
         for (let i = 0; i < 3; i++) {
             const offsetX = (Math.random() - 0.5) * 100;
@@ -395,6 +422,7 @@ export class Game {
             this.player.takeDamage(damage);
             this.screenShake.intensity = EFFECTS.SCREEN_SHAKE_INTENSITY;
             this.screenShake.duration = EFFECTS.SCREEN_SHAKE_DURATION;
+            this.audioManager.playPlayerHit();
         }
 
         // Handle destroyed enemies
@@ -403,6 +431,7 @@ export class Game {
 
             // Create explosion
             this.createExplosion(destroyed.position.x, destroyed.position.y);
+            this.audioManager.playEnemyDestroyed();
 
             // Maybe drop power-up
             if (destroyed.score > 0 && this.spawnManager.shouldDropPowerUp()) {
@@ -417,6 +446,7 @@ export class Game {
         // Handle collected power-ups
         for (const collected of results.powerUpsCollected) {
             this.player.applyPowerUp(collected.type, collected.duration);
+            this.audioManager.playPowerUp();
         }
     }
 
@@ -596,5 +626,12 @@ export class Game {
      */
     getState() {
         return this.state;
+    }
+
+    /**
+     * Get audio manager (for UI controls)
+     */
+    getAudioManager() {
+        return this.audioManager;
     }
 }

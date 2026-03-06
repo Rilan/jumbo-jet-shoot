@@ -78,6 +78,19 @@ body {
     font-size: 1.1rem;
 }
 
+.touch-instructions {
+    display: none;
+}
+
+@media (pointer: coarse) {
+    .touch-instructions {
+        display: block;
+        margin-top: -30px;
+        margin-bottom: 40px;
+        color: #00ffff;
+    }
+}
+
 .menu-button {
     background: linear-gradient(to bottom, #333, #222);
     border: 2px solid #00ffff;
@@ -249,6 +262,279 @@ body {
     transition: width 0.2s ease;
 }
 
+/* Audio Controls */
+#audio-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+}
+
+.icon-button {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #00ffff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.icon-button:hover {
+    background: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 10px #00ffff;
+}
+
+.icon-button.muted {
+    border-color: #666;
+    opacity: 0.6;
+}
+
+/* Touch Controls */
+#touch-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    pointer-events: none;
+    z-index: 50;
+}
+
+#touch-controls.hidden {
+    display: none;
+}
+
+#joystick-base {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 3px solid rgba(0, 255, 255, 0.5);
+    border-radius: 50%;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+#joystick-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 255, 255, 0.6);
+    border: 2px solid #00ffff;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+#fire-button {
+    position: absolute;
+    bottom: 50px;
+    right: 30px;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 68, 68, 0.3);
+    border: 3px solid rgba(255, 68, 68, 0.7);
+    border-radius: 50%;
+    pointer-events: auto;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+}
+
+#fire-button span {
+    color: #ff4444;
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 0 0 5px #ff4444;
+}
+
+#fire-button.active {
+    background: rgba(255, 68, 68, 0.6);
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.8);
+    transform: scale(0.95);
+}
+
+/* Modal */
+.modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: linear-gradient(to bottom, #1a1a2e, #0a0a1a);
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    padding: 30px;
+    min-width: 350px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+}
+
+.modal-content h2 {
+    color: #00ffff;
+    text-shadow: 0 0 15px #00ffff;
+    margin-bottom: 20px;
+    letter-spacing: 4px;
+}
+
+/* Name Input */
+#name-input-section {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #333;
+}
+
+#name-input-section.hidden {
+    display: none;
+}
+
+#new-score-msg {
+    color: #ffcc00;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px #ffcc00;
+    margin-bottom: 10px;
+}
+
+#your-score-display {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+#player-name-input {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #00ffff;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 1.2rem;
+    padding: 10px 15px;
+    width: 200px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    outline: none;
+    margin-bottom: 10px;
+}
+
+#player-name-input:focus {
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+#player-name-input::placeholder {
+    color: #666;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.error-text {
+    color: #ff4444;
+    font-size: 0.9rem;
+    min-height: 1.2em;
+    margin-bottom: 10px;
+}
+
+/* Scores List */
+#scores-list-section {
+    margin-bottom: 20px;
+}
+
+#scores-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 15px 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#scores-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 15px;
+    margin: 5px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+#scores-list li:nth-child(1) {
+    background: rgba(255, 215, 0, 0.2);
+    border: 1px solid #ffd700;
+}
+
+#scores-list li:nth-child(2) {
+    background: rgba(192, 192, 192, 0.2);
+    border: 1px solid #c0c0c0;
+}
+
+#scores-list li:nth-child(3) {
+    background: rgba(205, 127, 50, 0.2);
+    border: 1px solid #cd7f32;
+}
+
+#scores-list .rank {
+    color: #888;
+    min-width: 30px;
+    text-align: left;
+}
+
+#scores-list .name {
+    color: #00ffff;
+    flex: 1;
+    text-align: left;
+    margin-left: 10px;
+}
+
+#scores-list .score {
+    color: #fff;
+    font-weight: bold;
+    min-width: 80px;
+    text-align: right;
+}
+
+#scores-list .date {
+    color: #666;
+    font-size: 0.8rem;
+    min-width: 80px;
+    text-align: right;
+    margin-left: 15px;
+}
+
+#loading-scores,
+#no-scores {
+    color: #888;
+    font-style: italic;
+}
+
+#no-scores.hidden {
+    display: none;
+}
+
 /* Responsive */
 @media (max-width: 850px) {
     #game-container {
@@ -263,5 +549,33 @@ body {
 
     .screen h2 {
         font-size: 2rem;
+    }
+
+    #joystick-base {
+        width: 100px;
+        height: 100px;
+        bottom: 20px;
+        left: 20px;
+    }
+
+    #joystick-knob {
+        width: 40px;
+        height: 40px;
+    }
+
+    #fire-button {
+        width: 70px;
+        height: 70px;
+        bottom: 35px;
+        right: 20px;
+    }
+
+    .modal-content {
+        min-width: 280px;
+        padding: 20px;
+    }
+
+    #scores-list .date {
+        display: none;
     }
 }

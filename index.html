@@ -18,6 +18,9 @@
                     Spacebar / Click - Shoot<br>
                     P / Escape - Pause
                 </p>
+                <p class="instructions touch-instructions">
+                    Touch: Joystick to move, Fire button to shoot
+                </p>
                 <button id="start-button" class="menu-button">START GAME</button>
             </div>
 
@@ -34,6 +37,7 @@
                 <p id="final-score">Score: 0</p>
                 <p id="high-score">High Score: 0</p>
                 <button id="restart-button" class="menu-button">PLAY AGAIN</button>
+                <button id="leaderboard-button" class="menu-button">LEADERBOARD</button>
                 <button id="menu-button" class="menu-button">MAIN MENU</button>
             </div>
         </div>
@@ -65,6 +69,51 @@
             <span id="boss-name">BOSS</span>
             <div id="boss-health-bar">
                 <div id="boss-health-fill"></div>
+            </div>
+        </div>
+
+        <!-- Audio Controls -->
+        <div id="audio-controls">
+            <button id="mute-button" class="icon-button" title="Toggle Sound">
+                <span id="sound-icon">🔊</span>
+            </button>
+        </div>
+
+        <!-- Touch Controls -->
+        <div id="touch-controls" class="hidden">
+            <div id="joystick-base">
+                <div id="joystick-knob"></div>
+            </div>
+            <div id="fire-button">
+                <span>FIRE</span>
+            </div>
+        </div>
+
+        <!-- Leaderboard Modal -->
+        <div id="leaderboard-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>LEADERBOARD</h2>
+
+                <!-- Name Input Section -->
+                <div id="name-input-section" class="hidden">
+                    <p id="new-score-msg">NEW HIGH SCORE!</p>
+                    <p id="your-score-display"></p>
+                    <input type="text" id="player-name-input"
+                           placeholder="Enter your name"
+                           maxlength="10"
+                           autocomplete="off">
+                    <p id="name-error" class="error-text"></p>
+                    <button id="submit-score-button" class="menu-button">SUBMIT</button>
+                </div>
+
+                <!-- Scores List -->
+                <div id="scores-list-section">
+                    <ol id="scores-list"></ol>
+                    <p id="loading-scores">Loading scores...</p>
+                    <p id="no-scores" class="hidden">No scores yet. Be the first!</p>
+                </div>
+
+                <button id="close-leaderboard-button" class="menu-button">CLOSE</button>
             </div>
         </div>
     </div>

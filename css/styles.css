@@ -9,15 +9,19 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    height: 100vh;
+    height: 100svh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
+    /* iOS safe area support */
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 
 #game-container {
     position: relative;
     width: min(800px, 100vw, calc(100svh * 4 / 3));
     aspect-ratio: 4 / 3;
+    flex-shrink: 0;
 }
 
 #game-canvas {
@@ -535,6 +539,51 @@ body {
 
 #no-scores.hidden {
     display: none;
+}
+
+/* Portrait mobile — stack game above touch controls */
+@media (orientation: portrait) and (pointer: coarse) {
+    body {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: 0;
+    }
+
+    #game-container {
+        /*
+         * In portrait the limiting dimension is width.
+         * We also cap width so the 4:3 height never exceeds
+         * (viewport - touch-control-area - safe zones).
+         */
+        --touch-area: 180px;
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-bot: env(safe-area-inset-bottom, 0px);
+        --avail-h: calc(100svh - var(--touch-area) - var(--safe-top) - var(--safe-bot));
+        width: min(100vw, calc(var(--avail-h) * 4 / 3));
+    }
+
+    /* Touch controls sit below the canvas, fixed to bottom edge */
+    #touch-controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: calc(180px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    #joystick-base {
+        bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+        left: 30px;
+    }
+
+    #fire-button {
+        bottom: calc(45px + env(safe-area-inset-bottom, 0px));
+        right: 30px;
+    }
 }
 
 /* Responsive */

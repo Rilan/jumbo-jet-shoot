@@ -16,8 +16,8 @@ body {
 
 #game-container {
     position: relative;
-    width: 800px;
-    height: 600px;
+    width: min(800px, 100vw, calc(100svh * 4 / 3));
+    aspect-ratio: 4 / 3;
 }
 
 #game-canvas {
@@ -25,6 +25,8 @@ body {
     background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
     border: 2px solid #333;
     border-radius: 4px;
+    width: 100%;
+    height: 100%;
 }
 
 /* UI Overlay */
@@ -247,7 +249,7 @@ body {
 }
 
 #boss-health-bar {
-    width: 400px;
+    width: min(400px, 80%);
     height: 15px;
     background: #333;
     border: 2px solid #ff3333;
@@ -537,12 +539,6 @@ body {
 
 /* Responsive */
 @media (max-width: 850px) {
-    #game-container {
-        width: 100vw;
-        height: 75vw;
-        max-height: 100vh;
-    }
-
     .screen h1 {
         font-size: 2.5rem;
     }
@@ -577,5 +573,34 @@ body {
 
     #scores-list .date {
         display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .screen h1 {
+        font-size: 1.8rem;
+        letter-spacing: 4px;
+    }
+
+    .screen h2 {
+        font-size: 1.5rem;
+    }
+
+    .instructions {
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+
+    .menu-button {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+
+    #score-display {
+        font-size: 1.1rem;
+    }
+
+    #health-bar {
+        width: 100px;
     }
 }

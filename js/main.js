@@ -1,31 +1,27 @@
-import { Game } from './core/Game.js';
-import { GameLoop } from './core/GameLoop.js';
+import { BootScene } from './scenes/BootScene.js';
+import { GameScene } from './scenes/GameScene.js';
 
 /**
- * Entry point for the Jet Shooting Game
+ * Jet Shooting Game — Phaser 3
+ * Portrait-first canvas (450×800) with Scale.FIT for all screen sizes.
  */
+const config = {
+    type: Phaser.AUTO,         // WebGL with Canvas fallback
+    parent: 'game-container',
+    width: 450,
+    height: 800,
+    backgroundColor: '#0a0a1a',
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
+    physics: {
+        default: 'arcade',
+        arcade: { gravity: { y: 0 }, debug: false }
+    },
+    scene: [BootScene, GameScene]
+};
 
-// Wait for DOM to be ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Get canvas element
-    const canvas = document.getElementById('game-canvas');
-
-    if (!canvas) {
-        console.error('Could not find game canvas element');
-        return;
-    }
-
-    // Create game instance
-    const game = new Game(canvas);
-
-    // Create and start game loop
-    const gameLoop = new GameLoop(game);
-    gameLoop.start();
-
-    // Log startup
-    console.log('Jet Shooting Game initialized');
-    console.log('Controls:');
-    console.log('  WASD / Arrow Keys - Move');
-    console.log('  Spacebar / Left Click - Shoot');
-    console.log('  P / Escape - Pause');
+window.addEventListener('DOMContentLoaded', () => {
+    new Phaser.Game(config);
 });

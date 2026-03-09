@@ -4,56 +4,54 @@
     box-sizing: border-box;
 }
 
+/* ========================================================
+   LAYOUT — Phaser Scale Manager handles canvas sizing.
+   We just center the container in the viewport.
+   ======================================================== */
+
+html {
+    height: 100%;
+    background: #0a0a0f;
+}
+
 body {
-    background-color: #0a0a0f;
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 100%;
     height: 100vh;
-    height: 100svh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100svh;         /* stable viewport height (no URL-bar jitter) */
+    background: #0a0a0f;
     overflow: hidden;
-    /* iOS safe area support */
-    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Phaser appends its <canvas> here; container auto-sizes to it */
 #game-container {
     position: relative;
-    width: min(800px, 100vw, calc(100svh * 4 / 3));
-    aspect-ratio: 4 / 3;
-    flex-shrink: 0;
 }
 
-#game-canvas {
-    display: block;
-    background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
-    border: 2px solid #333;
-    border-radius: 4px;
-    width: 100%;
-    height: 100%;
-}
+/* ========================================================
+   SCREEN OVERLAYS  (start / pause / game-over)
+   Fixed to the viewport so they always cover the screen,
+   regardless of canvas size.
+   ======================================================== */
 
-/* UI Overlay */
 #ui-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    position: fixed;
+    inset: 0;
     pointer-events: none;
+    z-index: 100;
 }
 
 .screen {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.88);
     pointer-events: auto;
 }
 
@@ -62,26 +60,26 @@ body {
 }
 
 .screen h1 {
-    font-size: 4rem;
+    font-size: clamp(1.8rem, 8vw, 4rem);
     color: #00ffff;
     text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
     letter-spacing: 8px;
 }
 
 .screen h2 {
-    font-size: 3rem;
+    font-size: clamp(1.4rem, 6vw, 3rem);
     color: #ffcc00;
     text-shadow: 0 0 15px #ffcc00;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
 .instructions {
     color: #aaa;
     text-align: center;
     line-height: 2;
-    margin-bottom: 40px;
-    font-size: 1.1rem;
+    margin-bottom: 30px;
+    font-size: clamp(0.85rem, 3vw, 1.1rem);
 }
 
 .touch-instructions {
@@ -91,27 +89,33 @@ body {
 @media (pointer: coarse) {
     .touch-instructions {
         display: block;
-        margin-top: -30px;
-        margin-bottom: 40px;
+        margin-top: -20px;
+        margin-bottom: 30px;
         color: #00ffff;
     }
 }
+
+/* ========================================================
+   BUTTONS
+   ======================================================== */
 
 .menu-button {
     background: linear-gradient(to bottom, #333, #222);
     border: 2px solid #00ffff;
     color: #00ffff;
-    padding: 15px 50px;
-    font-size: 1.2rem;
+    padding: 14px 40px;
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
     cursor: pointer;
-    margin: 10px;
+    margin: 8px;
     border-radius: 5px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 2px;
+    touch-action: manipulation;
 }
 
-.menu-button:hover {
+.menu-button:hover,
+.menu-button:active {
     background: #00ffff;
     color: #000;
     box-shadow: 0 0 20px #00ffff;
@@ -119,196 +123,56 @@ body {
 
 #final-score, #high-score {
     color: #fff;
-    font-size: 1.5rem;
-    margin: 10px;
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+    margin: 8px;
 }
 
 #high-score {
     color: #ffcc00;
 }
 
-/* HUD */
-#hud {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    pointer-events: none;
-}
+/* ========================================================
+   AUDIO CONTROLS  (fixed, top-right of viewport)
+   ======================================================== */
 
-#hud.hidden {
-    display: none;
-}
-
-#hud-left, #hud-right {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-#hud-center {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-#health-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#health-container span {
-    color: #ff4444;
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-
-#health-bar {
-    width: 150px;
-    height: 20px;
-    background: #333;
-    border: 2px solid #666;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-#health-fill {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to bottom, #ff6666, #ff3333);
-    transition: width 0.3s ease;
-}
-
-#lives-container {
-    color: #fff;
-    font-size: 0.9rem;
-}
-
-#lives-display {
-    color: #00ff00;
-    font-weight: bold;
-}
-
-#score-display {
-    color: #fff;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-#powerup-display {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 5px;
-}
-
-.powerup-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 10px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 3px;
-    font-size: 0.8rem;
-}
-
-.powerup-indicator .icon {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-}
-
-.powerup-indicator .timer {
-    color: #fff;
-    min-width: 30px;
-}
-
-/* Boss Health Bar */
-#boss-health-container {
-    position: absolute;
-    bottom: 50px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-}
-
-#boss-health-container.hidden {
-    display: none;
-}
-
-#boss-name {
-    color: #ff3333;
-    font-size: 1rem;
-    font-weight: bold;
-    text-shadow: 0 0 10px #ff3333;
-}
-
-#boss-health-bar {
-    width: min(400px, 80%);
-    height: 15px;
-    background: #333;
-    border: 2px solid #ff3333;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-#boss-health-fill {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to bottom, #ff6666, #cc0000);
-    transition: width 0.2s ease;
-}
-
-/* Audio Controls */
 #audio-controls {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 100;
+    position: fixed;
+    top: env(safe-area-inset-top, 10px);
+    right: max(env(safe-area-inset-right, 0px), 10px);
+    z-index: 200;
 }
 
 .icon-button {
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid #00ffff;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.2rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
 }
 
-.icon-button:hover {
-    background: rgba(0, 255, 255, 0.2);
-    box-shadow: 0 0 10px #00ffff;
-}
+.icon-button:hover { background: rgba(0, 255, 255, 0.2); box-shadow: 0 0 10px #00ffff; }
+.icon-button.muted { border-color: #666; opacity: 0.6; }
 
-.icon-button.muted {
-    border-color: #666;
-    opacity: 0.6;
-}
+/* ========================================================
+   TOUCH CONTROLS  (fixed, bottom of viewport)
+   ======================================================== */
 
-/* Touch Controls */
 #touch-controls {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 200px;
+    height: 160px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     pointer-events: none;
-    z-index: 50;
+    z-index: 150;
 }
 
 #touch-controls.hidden {
@@ -317,11 +181,11 @@ body {
 
 #joystick-base {
     position: absolute;
-    bottom: 30px;
-    left: 30px;
-    width: 120px;
-    height: 120px;
-    background: rgba(255, 255, 255, 0.15);
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 25px;
+    width: 110px;
+    height: 110px;
+    background: rgba(255, 255, 255, 0.12);
     border: 3px solid rgba(0, 255, 255, 0.5);
     border-radius: 50%;
     pointer-events: auto;
@@ -333,18 +197,18 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50px;
-    height: 50px;
+    width: 46px;
+    height: 46px;
     background: rgba(0, 255, 255, 0.6);
     border: 2px solid #00ffff;
     border-radius: 50%;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
 }
 
 #fire-button {
     position: absolute;
-    bottom: 50px;
-    right: 30px;
+    bottom: calc(35px + env(safe-area-inset-bottom, 0px));
+    right: 25px;
     width: 80px;
     height: 80px;
     background: rgba(255, 68, 68, 0.3);
@@ -358,44 +222,33 @@ body {
     transition: all 0.1s ease;
 }
 
-#fire-button span {
-    color: #ff4444;
-    font-weight: bold;
-    font-size: 0.9rem;
-    text-shadow: 0 0 5px #ff4444;
-}
+#fire-button span { color: #ff4444; font-weight: bold; font-size: 0.85rem; text-shadow: 0 0 5px #ff4444; }
+#fire-button.active { background: rgba(255,68,68,0.65); box-shadow: 0 0 20px rgba(255,68,68,0.8); transform: scale(0.94); }
 
-#fire-button.active {
-    background: rgba(255, 68, 68, 0.6);
-    box-shadow: 0 0 20px rgba(255, 68, 68, 0.8);
-    transform: scale(0.95);
-}
+/* ========================================================
+   LEADERBOARD MODAL  (fixed, full screen)
+   ======================================================== */
 
-/* Modal */
 .modal {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 200;
+    z-index: 300;
 }
 
-.modal.hidden {
-    display: none;
-}
+.modal.hidden { display: none; }
 
 .modal-content {
     background: linear-gradient(to bottom, #1a1a2e, #0a0a1a);
     border: 2px solid #00ffff;
     border-radius: 10px;
-    padding: 30px;
-    min-width: 350px;
-    max-width: 90%;
+    padding: 24px;
+    width: min(420px, 90vw);
+    max-height: 80svh;
+    overflow-y: auto;
     text-align: center;
     box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
 }
@@ -403,33 +256,32 @@ body {
 .modal-content h2 {
     color: #00ffff;
     text-shadow: 0 0 15px #00ffff;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     letter-spacing: 4px;
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
 }
 
 /* Name Input */
 #name-input-section {
-    margin-bottom: 20px;
-    padding-bottom: 20px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
     border-bottom: 1px solid #333;
 }
 
-#name-input-section.hidden {
-    display: none;
-}
+#name-input-section.hidden { display: none; }
 
 #new-score-msg {
     color: #ffcc00;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: bold;
     text-shadow: 0 0 10px #ffcc00;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 #your-score-display {
     color: #fff;
-    font-size: 1.5rem;
-    margin-bottom: 15px;
+    font-size: 1.3rem;
+    margin-bottom: 12px;
 }
 
 #player-name-input {
@@ -437,43 +289,29 @@ body {
     border: 2px solid #00ffff;
     border-radius: 5px;
     color: #fff;
-    font-size: 1.2rem;
-    padding: 10px 15px;
+    font-size: 1.1rem;
+    padding: 9px 14px;
     width: 200px;
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 2px;
     outline: none;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
-#player-name-input:focus {
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-}
+#player-name-input:focus { box-shadow: 0 0 12px rgba(0,255,255,0.5); }
+#player-name-input::placeholder { color: #666; text-transform: none; letter-spacing: normal; }
 
-#player-name-input::placeholder {
-    color: #666;
-    text-transform: none;
-    letter-spacing: normal;
-}
-
-.error-text {
-    color: #ff4444;
-    font-size: 0.9rem;
-    min-height: 1.2em;
-    margin-bottom: 10px;
-}
+.error-text { color: #ff4444; font-size: 0.85rem; min-height: 1.2em; margin-bottom: 8px; }
 
 /* Scores List */
-#scores-list-section {
-    margin-bottom: 20px;
-}
+#scores-list-section { margin-bottom: 16px; }
 
 #scores-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 15px 0;
-    max-height: 300px;
+    margin: 0 0 12px 0;
+    max-height: 260px;
     overflow-y: auto;
 }
 
@@ -481,175 +319,23 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 15px;
-    margin: 5px 0;
+    padding: 7px 12px;
+    margin: 4px 0;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 5px;
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
-#scores-list li:nth-child(1) {
-    background: rgba(255, 215, 0, 0.2);
-    border: 1px solid #ffd700;
-}
+#scores-list li:nth-child(1) { background: rgba(255,215,0,0.18); border: 1px solid #ffd700; }
+#scores-list li:nth-child(2) { background: rgba(192,192,192,0.18); border: 1px solid #c0c0c0; }
+#scores-list li:nth-child(3) { background: rgba(205,127,50,0.18); border: 1px solid #cd7f32; }
 
-#scores-list li:nth-child(2) {
-    background: rgba(192, 192, 192, 0.2);
-    border: 1px solid #c0c0c0;
-}
+#scores-list .rank  { color: #888; min-width: 28px; text-align: left; }
+#scores-list .name  { color: #00ffff; flex: 1; text-align: left; margin-left: 8px; }
+#scores-list .score { color: #fff; font-weight: bold; min-width: 70px; text-align: right; }
+#scores-list .date  { color: #666; font-size: 0.75rem; min-width: 70px; text-align: right; margin-left: 12px; }
 
-#scores-list li:nth-child(3) {
-    background: rgba(205, 127, 50, 0.2);
-    border: 1px solid #cd7f32;
-}
+@media (max-width: 400px) { #scores-list .date { display: none; } }
 
-#scores-list .rank {
-    color: #888;
-    min-width: 30px;
-    text-align: left;
-}
-
-#scores-list .name {
-    color: #00ffff;
-    flex: 1;
-    text-align: left;
-    margin-left: 10px;
-}
-
-#scores-list .score {
-    color: #fff;
-    font-weight: bold;
-    min-width: 80px;
-    text-align: right;
-}
-
-#scores-list .date {
-    color: #666;
-    font-size: 0.8rem;
-    min-width: 80px;
-    text-align: right;
-    margin-left: 15px;
-}
-
-#loading-scores,
-#no-scores {
-    color: #888;
-    font-style: italic;
-}
-
-#no-scores.hidden {
-    display: none;
-}
-
-/* Portrait mobile — stack game above touch controls */
-@media (orientation: portrait) and (pointer: coarse) {
-    body {
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        padding-top: env(safe-area-inset-top, 0px);
-        padding-bottom: 0;
-    }
-
-    #game-container {
-        /*
-         * In portrait the limiting dimension is width.
-         * We also cap width so the 4:3 height never exceeds
-         * (viewport - touch-control-area - safe zones).
-         */
-        --touch-area: 180px;
-        --safe-top: env(safe-area-inset-top, 0px);
-        --safe-bot: env(safe-area-inset-bottom, 0px);
-        --avail-h: calc(100svh - var(--touch-area) - var(--safe-top) - var(--safe-bot));
-        width: min(100vw, calc(var(--avail-h) * 4 / 3));
-    }
-
-    /* Touch controls sit below the canvas, fixed to bottom edge */
-    #touch-controls {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: calc(180px + env(safe-area-inset-bottom, 0px));
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        background: rgba(0, 0, 0, 0.2);
-    }
-
-    #joystick-base {
-        bottom: calc(30px + env(safe-area-inset-bottom, 0px));
-        left: 30px;
-    }
-
-    #fire-button {
-        bottom: calc(45px + env(safe-area-inset-bottom, 0px));
-        right: 30px;
-    }
-}
-
-/* Responsive */
-@media (max-width: 850px) {
-    .screen h1 {
-        font-size: 2.5rem;
-    }
-
-    .screen h2 {
-        font-size: 2rem;
-    }
-
-    #joystick-base {
-        width: 100px;
-        height: 100px;
-        bottom: 20px;
-        left: 20px;
-    }
-
-    #joystick-knob {
-        width: 40px;
-        height: 40px;
-    }
-
-    #fire-button {
-        width: 70px;
-        height: 70px;
-        bottom: 35px;
-        right: 20px;
-    }
-
-    .modal-content {
-        min-width: 280px;
-        padding: 20px;
-    }
-
-    #scores-list .date {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .screen h1 {
-        font-size: 1.8rem;
-        letter-spacing: 4px;
-    }
-
-    .screen h2 {
-        font-size: 1.5rem;
-    }
-
-    .instructions {
-        font-size: 0.9rem;
-        margin-bottom: 20px;
-    }
-
-    .menu-button {
-        padding: 12px 30px;
-        font-size: 1rem;
-    }
-
-    #score-display {
-        font-size: 1.1rem;
-    }
-
-    #health-bar {
-        width: 100px;
-    }
-}
+#loading-scores, #no-scores { color: #888; font-style: italic; }
+#no-scores.hidden { display: none; }

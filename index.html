@@ -8,18 +8,22 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Jet Shooting Game</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- Phaser 3 — loaded before any module so window.Phaser is available -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
 </head>
 <body>
     <div id="game-container">
-        <canvas id="game-canvas"></canvas>
+        <!-- Phaser injects its canvas here -->
+
+        <!-- ===== SCREEN OVERLAYS (fixed to viewport) ===== -->
         <div id="ui-overlay">
             <!-- Start Screen -->
             <div id="start-screen" class="screen">
                 <h1>JET SHOOTER</h1>
                 <p class="instructions">
-                    WASD / Arrow Keys - Move<br>
-                    Spacebar / Click - Shoot<br>
-                    P / Escape - Pause
+                    WASD / Arrow Keys &mdash; Move<br>
+                    Spacebar / Click &mdash; Shoot<br>
+                    P / Escape &mdash; Pause
                 </p>
                 <p class="instructions touch-instructions">
                     Touch: Joystick to move, Fire button to shoot
@@ -45,36 +49,6 @@
             </div>
         </div>
 
-        <!-- HUD -->
-        <div id="hud" class="hidden">
-            <div id="hud-left">
-                <div id="health-container">
-                    <span>HP</span>
-                    <div id="health-bar">
-                        <div id="health-fill"></div>
-                    </div>
-                </div>
-                <div id="lives-container">
-                    <span>LIVES:</span>
-                    <span id="lives-display">3</span>
-                </div>
-            </div>
-            <div id="hud-center">
-                <div id="score-display">SCORE: 0</div>
-            </div>
-            <div id="hud-right">
-                <div id="powerup-display"></div>
-            </div>
-        </div>
-
-        <!-- Boss Health Bar -->
-        <div id="boss-health-container" class="hidden">
-            <span id="boss-name">BOSS</span>
-            <div id="boss-health-bar">
-                <div id="boss-health-fill"></div>
-            </div>
-        </div>
-
         <!-- Audio Controls -->
         <div id="audio-controls">
             <button id="mute-button" class="icon-button" title="Toggle Sound">
@@ -97,7 +71,6 @@
             <div class="modal-content">
                 <h2>LEADERBOARD</h2>
 
-                <!-- Name Input Section -->
                 <div id="name-input-section" class="hidden">
                     <p id="new-score-msg">NEW HIGH SCORE!</p>
                     <p id="your-score-display"></p>
@@ -109,7 +82,6 @@
                     <button id="submit-score-button" class="menu-button">SUBMIT</button>
                 </div>
 
-                <!-- Scores List -->
                 <div id="scores-list-section">
                     <ol id="scores-list"></ol>
                     <p id="loading-scores">Loading scores...</p>
@@ -121,7 +93,7 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Game entry point (ES module — loads after Phaser script above) -->
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -1,20 +1,20 @@
 /**
- * Game configuration constants
+ * Game configuration constants — Portrait canvas 450×800
  */
 export const CANVAS = {
-    WIDTH: 800,
-    HEIGHT: 600
+    WIDTH: 450,
+    HEIGHT: 800
 };
 
 export const PLAYER = {
-    WIDTH: 40,
-    HEIGHT: 50,
-    SPEED: 300,
+    WIDTH: 36,
+    HEIGHT: 46,
+    SPEED: 260,
     MAX_HEALTH: 100,
     STARTING_LIVES: 3,
     INVINCIBILITY_TIME: 2,
-    FIRE_RATE: 0.15,           // Seconds between shots
-    BULLET_SPEED: 500,
+    FIRE_RATE: 0.15,
+    BULLET_SPEED: 550,
     BULLET_DAMAGE: 25
 };
 
@@ -27,63 +27,44 @@ export const ENEMY_TYPES = {
 
 export const ENEMIES = {
     BASIC: {
-        WIDTH: 35,
-        HEIGHT: 35,
-        SPEED: 120,
-        HEALTH: 25,
-        SCORE: 100,
-        COLOR: '#ff4444'
+        WIDTH: 34, HEIGHT: 34,
+        SPEED: 130, HEALTH: 25, SCORE: 100, COLOR: '#ff4444'
     },
     ZIGZAG: {
-        WIDTH: 30,
-        HEIGHT: 30,
-        SPEED: 100,
-        HEALTH: 25,
-        SCORE: 150,
-        COLOR: '#ff8800',
-        AMPLITUDE: 100,
-        FREQUENCY: 3
+        WIDTH: 30, HEIGHT: 30,
+        SPEED: 110, HEALTH: 25, SCORE: 150, COLOR: '#ff8800',
+        AMPLITUDE: 80, FREQUENCY: 3
     },
     CIRCULAR: {
-        WIDTH: 25,
-        HEIGHT: 25,
-        SPEED: 80,
-        HEALTH: 35,
-        SCORE: 200,
-        COLOR: '#ff00ff',
-        RADIUS: 50,
-        ANGULAR_SPEED: 4
+        WIDTH: 26, HEIGHT: 26,
+        SPEED: 85, HEALTH: 35, SCORE: 200, COLOR: '#ff00ff',
+        RADIUS: 50, ANGULAR_SPEED: 4
     },
     SHOOTER: {
-        WIDTH: 40,
-        HEIGHT: 40,
-        SPEED: 60,
-        HEALTH: 50,
-        SCORE: 300,
-        COLOR: '#8844ff',
-        FIRE_RATE: 2,
-        BULLET_SPEED: 200
+        WIDTH: 40, HEIGHT: 40,
+        SPEED: 65, HEALTH: 50, SCORE: 300, COLOR: '#8844ff',
+        FIRE_RATE: 2, BULLET_SPEED: 200
     }
 };
 
 export const BOSS = {
-    WIDTH: 120,
-    HEIGHT: 80,
-    SPEED: 80,
-    HEALTH_MULTIPLIER: 20,     // Health = threshold / multiplier * 100
+    WIDTH: 110,
+    HEIGHT: 75,
+    SPEED: 90,
+    HEALTH_MULTIPLIER: 20,
     SCORE_MULTIPLIER: 10,
     COLOR: '#cc0000',
     SPAWN_THRESHOLDS: [1000, 3000, 6000, 10000],
     PHASES: [
         { healthPercent: 100, pattern: 'spread' },
-        { healthPercent: 66, pattern: 'circle' },
-        { healthPercent: 33, pattern: 'aimed' }
+        { healthPercent: 66,  pattern: 'circle' },
+        { healthPercent: 33,  pattern: 'aimed'  }
     ]
 };
 
 export const BULLET = {
     WIDTH: 6,
-    HEIGHT: 15,
+    HEIGHT: 14,
     PLAYER_COLOR: '#00ffff',
     ENEMY_COLOR: '#ff6600'
 };
@@ -98,9 +79,9 @@ export const POWERUP_TYPES = {
 };
 
 export const POWERUPS = {
-    SIZE: 25,
-    SPEED: 100,
-    DROP_CHANCE: 0.15,         // 15% chance to drop
+    SIZE: 24,
+    SPEED: 90,
+    DROP_CHANCE: 0.15,
     DURATION: {
         SHIELD: 5,
         SPEED_BOOST: 8,
@@ -117,10 +98,10 @@ export const POWERUPS = {
 };
 
 export const SPAWN = {
-    INITIAL_DELAY: 2,          // Seconds before first enemy
-    MIN_INTERVAL: 0.5,         // Minimum spawn interval
-    MAX_INTERVAL: 2,           // Maximum spawn interval
-    DIFFICULTY_INCREASE: 0.001 // Spawn rate increase per frame
+    INITIAL_DELAY: 2,
+    MIN_INTERVAL: 0.5,
+    MAX_INTERVAL: 2,
+    DIFFICULTY_INCREASE: 0.001
 };
 
 export const COLORS = {
@@ -133,22 +114,27 @@ export const COLORS = {
 export const EFFECTS = {
     EXPLOSION_PARTICLES: 15,
     TRAIL_LENGTH: 5,
-    SCREEN_SHAKE_INTENSITY: 5,
-    SCREEN_SHAKE_DURATION: 0.2
+    SCREEN_SHAKE_INTENSITY: 0.006,
+    SCREEN_SHAKE_DURATION: 200
 };
 
 export const KEYS = {
-    UP: ['ArrowUp', 'KeyW'],
-    DOWN: ['ArrowDown', 'KeyS'],
-    LEFT: ['ArrowLeft', 'KeyA'],
+    UP:    ['ArrowUp',    'KeyW'],
+    DOWN:  ['ArrowDown',  'KeyS'],
+    LEFT:  ['ArrowLeft',  'KeyA'],
     RIGHT: ['ArrowRight', 'KeyD'],
     SHOOT: ['Space'],
     PAUSE: ['KeyP', 'Escape']
 };
 
 export const GAME_STATES = {
-    MENU: 'menu',
-    PLAYING: 'playing',
-    PAUSED: 'paused',
+    MENU:      'menu',
+    PLAYING:   'playing',
+    PAUSED:    'paused',
     GAME_OVER: 'gameover'
 };
+
+/** Convert CSS hex colour string to Phaser integer */
+export function hexColor(str) {
+    return parseInt(str.replace('#', ''), 16);
+}

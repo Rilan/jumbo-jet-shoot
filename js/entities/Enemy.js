@@ -1,143 +1,78 @@
 import { Entity } from './Entity.js';
 import { Vector2 } from '../utils/Vector2.js';
-import { ENEMIES, ENEMY_TYPES, CANVAS } from '../utils/Constants.js';
+import { ENEMIES, ENEMY_TYPES, CANVAS, hexColor } from '../utils/Constants.js';
 
-/**
- * Base enemy class
- */
+const DEPTH = 30;
+
 export class Enemy extends Entity {
-    constructor(x, y, type = ENEMY_TYPES.BASIC) {
-        const config = ENEMIES[type.toUpperCase()] || ENEMIES.BASIC;
+    constructor(scene, x, y, type = ENEMY_TYPES.BASIC) {
+        const cfg = ENEMIES[type.toUpperCase()] || ENEMIES.BASIC;
+        super(scene, x, y, cfg.WIDTH, cfg.HEIGHT, DEPTH);
 
-        super(x, y, config.WIDTH, config.HEIGHT);
+        this.type     = type;
+        this.config   = cfg;
+        this.health   = cfg.HEALTH;
+        this.maxHealth = cfg.HEALTH;
+        this.speed    = cfg.SPEED;
+        this.score    = cfg.SCORE;
+        this.colorInt = hexColor(cfg.COLOR);
 
-        this.type = type;
-        this.config = config;
-        this.health = config.HEALTH;
-        this.maxHealth = config.HEALTH;
-        this.speed = config.SPEED;
-        this.score = config.SCORE;
-        this.color = config.COLOR;
-
-        // Movement tracking
         this.startX = x;
         this.startY = y;
-        this.time = Math.random() * Math.PI * 2; // Random phase offset
+        this.time   = Math.random() * Math.PI * 2;
 
-        // Shooter enemy properties
         this.fireCooldown = 0;
-        this.fireRate = config.FIRE_RATE || 2;
-
-        // Damage flash
-        this.damageFlash = 0;
+        this.fireRate     = cfg.FIRE_RATE || 2;
+        this.damageFlash  = 0;
     }
 
-    /**
-     * Update enemy state
-     */
     update(deltaTime, playerPosition = null) {
         this.time += deltaTime;
 
-        // Update based on type
         switch (this.type) {
-            case ENEMY_TYPES.BASIC:
-                this.updateBasic(deltaTime);
-                break;
-            case ENEMY_TYPES.ZIGZAG:
-                this.updateZigZag(deltaTime);
-                break;
-            case ENEMY_TYPES.CIRCULAR:
-                this.updateCircular(deltaTime);
-                break;
-            case ENEMY_TYPES.SHOOTER:
-                this.updateShooter(deltaTime, playerPosition);
-                break;
-            default:
-                this.updateBasic(deltaTime);
+            case ENEMY_TYPES.BASIC:    this.updateBasic(deltaTime); break;
+            case ENEMY_TYPES.ZIGZAG:   this.updateZigZag(deltaTime); break;
+            case ENEMY_TYPES.CIRCULAR: this.updateCircular(deltaTime); break;
+            case ENEMY_TYPES.SHOOTER:  this.updateShooter(deltaTime, playerPosition); break;
+            default: this.updateBasic(deltaTime);
         }
 
-        // Damage flash decay
-        if (this.damageFlash > 0) {
-            this.damageFlash -= deltaTime * 5;
-        }
-
-        // Destroy if too far below screen
-        if (this.position.y > CANVAS.HEIGHT + 100) {
-            this.destroy();
-        }
+        if (this.damageFlash > 0) this.damageFlash -= deltaTime * 5;
+        if (this.position.y > CANVAS.HEIGHT + 100) this.destroy();
     }
 
-    /**
-     * Basic enemy - moves straight down
-     */
-    updateBasic(deltaTime) {
+    updateBasic(dt) {
         this.velocity.set(0, this.speed);
-        this.position.y += this.velocity.y * deltaTime;
+        this.position.y += this.velocity.y * dt;
     }
 
-    /**
-     * ZigZag enemy - oscillates horizontally while moving down
-     */
-    updateZigZag(deltaTime) {
-        const config = ENEMIES.ZIGZAG;
-        const horizontalOffset = Math.sin(this.time * config.FREQUENCY) * config.AMPLITUDE;
-
-        this.position.x = this.startX + horizontalOffset;
-        this.position.y += this.speed * deltaTime;
-
-        // Bounce off walls
-        if (this.position.x < this.width / 2) {
-            this.startX = this.width / 2 - horizontalOffset;
-        }
-        if (this.position.x > CANVAS.WIDTH - this.width / 2) {
-            this.startX = CANVAS.WIDTH - this.width / 2 - horizontalOffset;
-        }
+    updateZigZag(dt) {
+        const cfg = ENEMIES.ZIGZAG;
+        const ho  = Math.sin(this.time * cfg.FREQUENCY) * cfg.AMPLITUDE;
+        this.position.x  = this.startX + ho;
+        this.position.y += this.speed * dt;
+        if (this.position.x < this.width / 2)                  this.startX = this.width / 2 - ho;
+        if (this.position.x > CANVAS.WIDTH - this.width / 2)   this.startX = CANVAS.WIDTH - this.width / 2 - ho;
     }
 
-    /**
-     * Circular enemy - spiral/circular movement pattern
-     */
-    updateCircular(deltaTime) {
-        const config = ENEMIES.CIRCULAR;
-        const angle = this.time * config.ANGULAR_SPEED;
-
-        this.position.x = this.startX + Math.cos(angle) * config.RADIUS;
-        this.position.y += this.speed * deltaTime;
-
-        // Update center point
+    updateCircular(dt) {
+        const cfg   = ENEMIES.CIRCULAR;
+        const angle = this.time * cfg.ANGULAR_SPEED;
+        this.position.x  = this.startX + Math.cos(angle) * cfg.RADIUS;
+        this.position.y += this.speed * dt;
         this.startX += Math.sin(angle) * 0.5;
-
-        // Keep in bounds horizontally
-        if (this.startX < config.RADIUS + this.width) {
-            this.startX = config.RADIUS + this.width;
-        }
-        if (this.startX > CANVAS.WIDTH - config.RADIUS - this.width) {
-            this.startX = CANVAS.WIDTH - config.RADIUS - this.width;
-        }
+        this.startX = Math.max(cfg.RADIUS + this.width, Math.min(CANVAS.WIDTH - cfg.RADIUS - this.width, this.startX));
     }
 
-    /**
-     * Shooter enemy - moves slowly and shoots at player
-     */
-    updateShooter(deltaTime, playerPosition) {
-        // Move down slowly
-        this.position.y += this.speed * deltaTime;
-
-        // Try to align with player horizontally
+    updateShooter(dt, playerPosition) {
+        this.position.y += this.speed * dt;
         if (playerPosition) {
             const dx = playerPosition.x - this.position.x;
-            this.position.x += Math.sign(dx) * this.speed * 0.3 * deltaTime;
+            this.position.x += Math.sign(dx) * this.speed * 0.3 * dt;
         }
-
-        // Update fire cooldown
-        if (this.fireCooldown > 0) {
-            this.fireCooldown -= deltaTime;
-        }
+        if (this.fireCooldown > 0) this.fireCooldown -= dt;
     }
 
-    /**
-     * Check if shooter can fire
-     */
     canShoot() {
         return this.type === ENEMY_TYPES.SHOOTER &&
             this.fireCooldown <= 0 &&
@@ -145,158 +80,111 @@ export class Enemy extends Entity {
             this.position.y < CANVAS.HEIGHT - 100;
     }
 
-    /**
-     * Reset fire cooldown after shooting
-     */
-    shoot() {
-        this.fireCooldown = this.fireRate;
-    }
+    shoot() { this.fireCooldown = this.fireRate; }
 
-    /**
-     * Take damage
-     */
     takeDamage(amount) {
         this.health -= amount;
         this.damageFlash = 1;
-
-        if (this.health <= 0) {
-            this.destroy();
-            return true; // Destroyed
-        }
+        if (this.health <= 0) { this.destroy(); return true; }
         return false;
     }
 
-    /**
-     * Render the enemy
-     */
-    render(ctx) {
-        ctx.save();
-        ctx.translate(this.position.x, this.position.y);
+    draw() {
+        if (!this.graphic) return;
+        const g = this.graphic;
+        const px = this.position.x;
+        const py = this.position.y;
+        const w  = this.width;
+        const h  = this.height;
+        const fl = this.damageFlash > 0;
+        const c  = fl ? 0xffffff : this.colorInt;
 
-        // Damage flash effect
-        if (this.damageFlash > 0) {
-            ctx.globalAlpha = 0.7;
-        }
+        g.setPosition(px, py);
+        g.setAlpha(1);
+        g.clear();
 
-        // Render based on type
         switch (this.type) {
-            case ENEMY_TYPES.BASIC:
-                this.renderBasic(ctx);
-                break;
-            case ENEMY_TYPES.ZIGZAG:
-                this.renderZigZag(ctx);
-                break;
-            case ENEMY_TYPES.CIRCULAR:
-                this.renderCircular(ctx);
-                break;
-            case ENEMY_TYPES.SHOOTER:
-                this.renderShooter(ctx);
-                break;
-            default:
-                this.renderBasic(ctx);
+            case ENEMY_TYPES.BASIC:    this._drawBasic(g, w, h, c, fl); break;
+            case ENEMY_TYPES.ZIGZAG:   this._drawZigZag(g, w, h, c); break;
+            case ENEMY_TYPES.CIRCULAR: this._drawCircular(g, w, h, c); break;
+            case ENEMY_TYPES.SHOOTER:  this._drawShooter(g, w, h, c); break;
+            default: this._drawBasic(g, w, h, c, fl);
         }
-
-        ctx.restore();
     }
 
-    /**
-     * Render basic enemy (triangle pointing down)
-     */
-    renderBasic(ctx) {
-        ctx.fillStyle = this.damageFlash > 0 ? '#ffffff' : this.color;
-        ctx.beginPath();
-        ctx.moveTo(0, this.height / 2);
-        ctx.lineTo(-this.width / 2, -this.height / 2);
-        ctx.lineTo(this.width / 2, -this.height / 2);
-        ctx.closePath();
-        ctx.fill();
+    _drawBasic(g, w, h, c) {
+        g.fillStyle(c, 1);
+        g.beginPath();
+        g.moveTo(0,    h / 2);
+        g.lineTo(-w / 2, -h / 2);
+        g.lineTo( w / 2, -h / 2);
+        g.closePath();
+        g.fillPath();
 
-        // Details
-        ctx.fillStyle = '#880000';
-        ctx.beginPath();
-        ctx.arc(0, -this.height / 6, 5, 0, Math.PI * 2);
-        ctx.fill();
+        g.fillStyle(0x880000, 1);
+        g.fillCircle(0, -h / 6, 5);
     }
 
-    /**
-     * Render zigzag enemy (diamond shape)
-     */
-    renderZigZag(ctx) {
-        ctx.fillStyle = this.damageFlash > 0 ? '#ffffff' : this.color;
-        ctx.beginPath();
-        ctx.moveTo(0, -this.height / 2);
-        ctx.lineTo(this.width / 2, 0);
-        ctx.lineTo(0, this.height / 2);
-        ctx.lineTo(-this.width / 2, 0);
-        ctx.closePath();
-        ctx.fill();
+    _drawZigZag(g, w, h, c) {
+        g.fillStyle(c, 1);
+        g.beginPath();
+        g.moveTo(0,     -h / 2);
+        g.lineTo( w / 2, 0);
+        g.lineTo(0,      h / 2);
+        g.lineTo(-w / 2, 0);
+        g.closePath();
+        g.fillPath();
 
-        // Stripes
-        ctx.strokeStyle = '#553300';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-this.width / 4, -this.height / 4);
-        ctx.lineTo(this.width / 4, this.height / 4);
-        ctx.moveTo(this.width / 4, -this.height / 4);
-        ctx.lineTo(-this.width / 4, this.height / 4);
-        ctx.stroke();
+        g.lineStyle(2, 0x553300, 1);
+        g.beginPath();
+        g.moveTo(-w / 4, -h / 4);
+        g.lineTo( w / 4,  h / 4);
+        g.strokePath();
+        g.beginPath();
+        g.moveTo( w / 4, -h / 4);
+        g.lineTo(-w / 4,  h / 4);
+        g.strokePath();
     }
 
-    /**
-     * Render circular enemy (hexagon)
-     */
-    renderCircular(ctx) {
-        ctx.fillStyle = this.damageFlash > 0 ? '#ffffff' : this.color;
-        ctx.beginPath();
+    _drawCircular(g, w, h, c) {
+        g.fillStyle(c, 1);
+        g.beginPath();
         for (let i = 0; i < 6; i++) {
-            const angle = (i / 6) * Math.PI * 2 + this.time;
-            const x = Math.cos(angle) * this.width / 2;
-            const y = Math.sin(angle) * this.height / 2;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
+            const a = (i / 6) * Math.PI * 2 + this.time;
+            const x = Math.cos(a) * w / 2;
+            const y = Math.sin(a) * h / 2;
+            if (i === 0) g.moveTo(x, y);
+            else g.lineTo(x, y);
         }
-        ctx.closePath();
-        ctx.fill();
+        g.closePath();
+        g.fillPath();
 
-        // Center orb
-        ctx.fillStyle = '#ff00ff';
-        ctx.beginPath();
-        ctx.arc(0, 0, 6, 0, Math.PI * 2);
-        ctx.fill();
+        g.fillStyle(0xff00ff, 1);
+        g.fillCircle(0, 0, 6);
     }
 
-    /**
-     * Render shooter enemy (larger with cannons)
-     */
-    renderShooter(ctx) {
-        ctx.fillStyle = this.damageFlash > 0 ? '#ffffff' : this.color;
-
-        // Main body
-        ctx.beginPath();
-        ctx.moveTo(0, this.height / 2);
-        ctx.lineTo(-this.width / 2, -this.height / 4);
-        ctx.lineTo(-this.width / 4, -this.height / 2);
-        ctx.lineTo(this.width / 4, -this.height / 2);
-        ctx.lineTo(this.width / 2, -this.height / 4);
-        ctx.closePath();
-        ctx.fill();
+    _drawShooter(g, w, h, c) {
+        g.fillStyle(c, 1);
+        g.beginPath();
+        g.moveTo(0,     h / 2);
+        g.lineTo(-w / 2, -h / 4);
+        g.lineTo(-w / 4, -h / 2);
+        g.lineTo( w / 4, -h / 2);
+        g.lineTo( w / 2, -h / 4);
+        g.closePath();
+        g.fillPath();
 
         // Cannons
-        ctx.fillStyle = '#442288';
-        ctx.fillRect(-this.width / 2 - 5, this.height / 4, 10, 15);
-        ctx.fillRect(this.width / 2 - 5, this.height / 4, 10, 15);
+        g.fillStyle(0x442288, 1);
+        g.fillRect(-w / 2 - 5, h / 4, 10, 14);
+        g.fillRect( w / 2 - 5, h / 4, 10, 14);
 
         // Eye
-        ctx.fillStyle = '#ffff00';
-        ctx.beginPath();
-        ctx.arc(0, 0, 6, 0, Math.PI * 2);
-        ctx.fill();
+        g.fillStyle(0xffff00, 1);
+        g.fillCircle(0, 0, 6);
     }
 }
 
-/**
- * Factory function to create enemies
- */
-export function createEnemy(x, y, type) {
-    return new Enemy(x, y, type);
+export function createEnemy(scene, x, y, type) {
+    return new Enemy(scene, x, y, type);
 }

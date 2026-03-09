@@ -1,4 +1,3 @@
-import { POWERUPS, GAME_STATES } from '../utils/Constants.js';
 import { LeaderboardManager } from '../core/LeaderboardManager.js';
 
 /**
@@ -20,18 +19,6 @@ export class UIManager {
             restartButton: document.getElementById('restart-button'),
             menuButton: document.getElementById('menu-button'),
             leaderboardButton: document.getElementById('leaderboard-button'),
-
-            // HUD
-            hud: document.getElementById('hud'),
-            healthFill: document.getElementById('health-fill'),
-            livesDisplay: document.getElementById('lives-display'),
-            scoreDisplay: document.getElementById('score-display'),
-            powerupDisplay: document.getElementById('powerup-display'),
-
-            // Boss
-            bossHealthContainer: document.getElementById('boss-health-container'),
-            bossName: document.getElementById('boss-name'),
-            bossHealthFill: document.getElementById('boss-health-fill'),
 
             // Game over
             finalScore: document.getElementById('final-score'),
@@ -189,7 +176,6 @@ export class UIManager {
         switch (screenName) {
             case 'start':
                 this.elements.startScreen.classList.remove('hidden');
-                this.elements.hud.classList.add('hidden');
                 break;
             case 'pause':
                 this.elements.pauseScreen.classList.remove('hidden');
@@ -198,78 +184,18 @@ export class UIManager {
                 this.elements.gameoverScreen.classList.remove('hidden');
                 break;
             case 'game':
-                this.elements.hud.classList.remove('hidden');
+                // HUD is now rendered by Phaser — nothing to do here
                 break;
         }
     }
 
-    /**
-     * Update HUD elements
-     */
-    updateHUD(player, score) {
-        // Health bar
-        const healthPercent = (player.health / player.maxHealth) * 100;
-        this.elements.healthFill.style.width = `${healthPercent}%`;
+    /** HUD is rendered by Phaser — these are kept for API compatibility. */
+    updateHUD(_player, _score) {}
+    updatePowerUpDisplay(_powerUps) {}
 
-        // Health bar color
-        if (healthPercent > 50) {
-            this.elements.healthFill.style.background = 'linear-gradient(to bottom, #66ff66, #33cc33)';
-        } else if (healthPercent > 25) {
-            this.elements.healthFill.style.background = 'linear-gradient(to bottom, #ffcc00, #ff9900)';
-        } else {
-            this.elements.healthFill.style.background = 'linear-gradient(to bottom, #ff6666, #ff3333)';
-        }
-
-        // Lives
-        this.elements.livesDisplay.textContent = player.lives;
-
-        // Score
-        this.elements.scoreDisplay.textContent = `SCORE: ${score.toLocaleString()}`;
-
-        // Active power-ups
-        this.updatePowerUpDisplay(player.getActivePowerUps());
-    }
-
-    /**
-     * Update active power-up indicators
-     */
-    updatePowerUpDisplay(powerUps) {
-        this.elements.powerupDisplay.innerHTML = '';
-
-        for (const powerUp of powerUps) {
-            const indicator = document.createElement('div');
-            indicator.className = 'powerup-indicator';
-
-            const icon = document.createElement('div');
-            icon.className = 'icon';
-            icon.style.background = POWERUPS.COLORS[powerUp.type] || '#fff';
-
-            const timer = document.createElement('div');
-            timer.className = 'timer';
-            timer.textContent = Math.ceil(powerUp.timer) + 's';
-            timer.style.color = POWERUPS.COLORS[powerUp.type] || '#fff';
-
-            indicator.appendChild(icon);
-            indicator.appendChild(timer);
-            this.elements.powerupDisplay.appendChild(indicator);
-        }
-    }
-
-    /**
-     * Show boss health bar
-     */
-    showBossHealth(bossName, healthPercent) {
-        this.elements.bossHealthContainer.classList.remove('hidden');
-        this.elements.bossName.textContent = bossName;
-        this.elements.bossHealthFill.style.width = `${healthPercent * 100}%`;
-    }
-
-    /**
-     * Hide boss health bar
-     */
-    hideBossHealth() {
-        this.elements.bossHealthContainer.classList.add('hidden');
-    }
+    /** Boss health is rendered by Phaser HUD — these are kept for API compatibility. */
+    showBossHealth(_name, _percent) {}
+    hideBossHealth() {}
 
     /**
      * Show game over screen with scores

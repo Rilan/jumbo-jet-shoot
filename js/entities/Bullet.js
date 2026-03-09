@@ -1,135 +1,103 @@
 import { Entity } from './Entity.js';
 import { Vector2 } from '../utils/Vector2.js';
-import { BULLET, CANVAS } from '../utils/Constants.js';
+import { BULLET, CANVAS, hexColor } from '../utils/Constants.js';
 
-/**
- * Bullet/projectile entity
- */
+const DEPTH = 20;
+
 export class Bullet extends Entity {
-    constructor(x, y, angle, speed, damage, isPlayerBullet = true) {
-        super(x, y, BULLET.WIDTH, BULLET.HEIGHT);
+    constructor(scene, x, y, angle, speed, damage, isPlayerBullet = true) {
+        super(scene, x, y, BULLET.WIDTH, BULLET.HEIGHT, DEPTH);
 
-        this.angle = angle;
-        this.speed = speed;
-        this.damage = damage;
+        this.angle          = angle;
+        this.speed          = speed;
+        this.damage         = damage;
         this.isPlayerBullet = isPlayerBullet;
+        this.colorStr       = isPlayerBullet ? BULLET.PLAYER_COLOR : BULLET.ENEMY_COLOR;
+        this.colorInt       = hexColor(this.colorStr);
 
-        // Set velocity based on angle
         this.velocity = Vector2.fromAngle(angle, speed);
 
-        // Visual properties
-        this.color = isPlayerBullet ? BULLET.PLAYER_COLOR : BULLET.ENEMY_COLOR;
-        this.trail = [];
+        this.trail        = [];
         this.maxTrailLength = 5;
     }
 
-    /**
-     * Update bullet state
-     */
     update(deltaTime) {
-        // Store trail position
-        this.trail.unshift({
-            x: this.position.x,
-            y: this.position.y,
-            alpha: 1
-        });
+        this.trail.unshift({ x: this.position.x, y: this.position.y, alpha: 1 });
+        while (this.trail.length > this.maxTrailLength) this.trail.pop();
+        this.trail.forEach((p, i) => { p.alpha = 1 - i / this.maxTrailLength; });
 
-        // Limit trail
-        while (this.trail.length > this.maxTrailLength) {
-            this.trail.pop();
-        }
-
-        // Fade trail
-        this.trail.forEach((point, index) => {
-            point.alpha = 1 - (index / this.maxTrailLength);
-        });
-
-        // Update position
         super.update(deltaTime);
 
-        // Destroy if out of bounds
-        if (!this.isInBounds(CANVAS.WIDTH, CANVAS.HEIGHT)) {
-            this.destroy();
+        if (!this.isInBounds(CANVAS.WIDTH, CANVAS.HEIGHT)) this.destroy();
+    }
+
+    draw() {
+        if (!this.graphic) return;
+        const g = this.graphic;
+        g.setPosition(this.position.x, this.position.y);
+        g.setRotation(this.angle + Math.PI / 2);
+        g.clear();
+
+        // Trail
+        for (let i = 0; i < this.trail.length; i++) {
+            const tp   = this.trail[i];
+            const size = (1 - i / this.maxTrailLength) * 3;
+            // convert to local coords relative to current pos (unrotated)
+            const dx = tp.x - this.position.x;
+            const dy = tp.y - this.position.y;
+            // un-rotate trail points back to local space
+            const cos = Math.cos(-(this.angle + Math.PI / 2));
+            const sin = Math.sin(-(this.angle + Math.PI / 2));
+            const lx  = dx * cos - dy * sin;
+            const ly  = dx * sin + dy * cos;
+            g.fillStyle(this.colorInt, tp.alpha * 0.5);
+            g.fillCircle(lx, ly, size);
         }
+
+        // Bullet body (ellipse centred at local origin)
+        g.fillStyle(this.colorInt, 1);
+        g.fillEllipse(0, 0, this.width, this.height);
+
+        // Glow layer
+        g.fillStyle(this.colorInt, 0.35);
+        g.fillEllipse(0, 0, this.width * 2.2, this.height * 1.4);
     }
 
-    /**
-     * Render the bullet
-     */
-    render(ctx) {
-        ctx.save();
-
-        // Draw trail
-        this.trail.forEach((point, index) => {
-            const size = (1 - index / this.maxTrailLength) * 3;
-            ctx.globalAlpha = point.alpha * 0.5;
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // Draw bullet
-        ctx.globalAlpha = 1;
-        ctx.translate(this.position.x, this.position.y);
-        ctx.rotate(this.angle + Math.PI / 2);
-
-        // Bullet shape
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Glow effect
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 10;
-        ctx.fill();
-
-        ctx.restore();
-    }
-
-    /**
-     * Get a narrower hitbox for bullets
-     */
     getBounds() {
         return {
-            x: this.position.x - this.width / 2,
-            y: this.position.y - this.height / 2,
-            width: this.width,
+            x:      this.position.x - this.width  / 2,
+            y:      this.position.y - this.height / 2,
+            width:  this.width,
             height: this.height
         };
     }
 }
 
-/**
- * Boss bullet with special properties
- */
 export class BossBullet extends Bullet {
-    constructor(x, y, angle, speed, damage) {
-        super(x, y, angle, speed, damage, false);
-        this.width = 10;
-        this.height = 10;
-        this.color = '#ff3333';
+    constructor(scene, x, y, angle, speed, damage) {
+        super(scene, x, y, angle, speed, damage, false);
+        this.width    = 10;
+        this.height   = 10;
+        this.colorInt = 0xff3333;
     }
 
-    render(ctx) {
-        ctx.save();
-        ctx.translate(this.position.x, this.position.y);
+    draw() {
+        if (!this.graphic) return;
+        const g = this.graphic;
+        g.setPosition(this.position.x, this.position.y);
+        g.setRotation(0);
+        g.clear();
 
-        // Draw larger boss bullet
-        ctx.fillStyle = this.color;
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 15;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.width / 2, 0, Math.PI * 2);
-        ctx.fill();
+        // Outer glow
+        g.fillStyle(0xff3333, 0.3);
+        g.fillCircle(0, 0, this.width * 1.4);
 
-        // Inner glow
-        ctx.fillStyle = '#ffaaaa';
-        ctx.beginPath();
-        ctx.arc(0, 0, this.width / 4, 0, Math.PI * 2);
-        ctx.fill();
+        // Main orb
+        g.fillStyle(0xff3333, 1);
+        g.fillCircle(0, 0, this.width / 2);
 
-        ctx.restore();
+        // Inner bright core
+        g.fillStyle(0xffaaaa, 1);
+        g.fillCircle(0, 0, this.width / 4);
     }
 }

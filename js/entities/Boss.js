@@ -1,157 +1,96 @@
 import { Entity } from './Entity.js';
 import { Vector2 } from '../utils/Vector2.js';
-import { BOSS, CANVAS } from '../utils/Constants.js';
+import { BOSS, CANVAS, hexColor } from '../utils/Constants.js';
 
-/**
- * Boss enemy with multiple attack patterns and phases
- */
+const DEPTH = 35;
+
 export class Boss extends Entity {
-    constructor(x, y, level = 1) {
-        super(x, y, BOSS.WIDTH, BOSS.HEIGHT);
+    constructor(scene, x, y, level = 1) {
+        super(scene, x, y, BOSS.WIDTH, BOSS.HEIGHT, DEPTH);
 
-        this.level = level;
-        this.health = this.calculateHealth();
+        this.level    = level;
+        this.health   = this.calculateHealth();
         this.maxHealth = this.health;
-        this.speed = BOSS.SPEED;
-        this.score = this.calculateScore();
-        this.color = BOSS.COLOR;
+        this.speed    = BOSS.SPEED;
+        this.score    = this.calculateScore();
 
-        // State machine
-        this.state = 'entering';  // entering, fighting, defeated
-        this.phase = 0;           // Current attack phase
+        this.state   = 'entering';
+        this.phase   = 0;
         this.phaseThresholds = BOSS.PHASES.map(p => p.healthPercent);
 
-        // Movement
-        this.targetX = CANVAS.WIDTH / 2;
-        this.targetY = 100;
-        this.moveTimer = 0;
+        this.targetX     = CANVAS.WIDTH / 2;
+        this.targetY     = 100;
+        this.moveTimer   = 0;
         this.moveDuration = 2;
 
-        // Attack properties
-        this.attackTimer = 0;
+        this.attackTimer   = 0;
         this.attackCooldown = 1.5;
         this.currentPattern = 'spread';
 
-        // Visual effects
-        this.time = 0;
+        this.time        = 0;
         this.damageFlash = 0;
         this.shakeOffset = { x: 0, y: 0 };
     }
 
-    /**
-     * Calculate boss health based on level
-     */
     calculateHealth() {
         const threshold = BOSS.SPAWN_THRESHOLDS[this.level - 1] || 1000;
         return Math.floor(threshold / BOSS.HEALTH_MULTIPLIER) * 10 + 200;
     }
 
-    /**
-     * Calculate boss score based on level
-     */
-    calculateScore() {
-        return this.level * 1000;
-    }
+    calculateScore() { return this.level * 1000; }
 
-    /**
-     * Update boss state
-     */
     update(deltaTime, playerPosition = null) {
         this.time += deltaTime;
 
-        // Update based on state
         switch (this.state) {
-            case 'entering':
-                this.updateEntering(deltaTime);
-                break;
-            case 'fighting':
-                this.updateFighting(deltaTime, playerPosition);
-                break;
-            case 'defeated':
-                this.updateDefeated(deltaTime);
-                break;
+            case 'entering':  this.updateEntering(deltaTime); break;
+            case 'fighting':  this.updateFighting(deltaTime, playerPosition); break;
+            case 'defeated':  this.updateDefeated(); break;
         }
 
-        // Update damage flash
-        if (this.damageFlash > 0) {
-            this.damageFlash -= deltaTime * 3;
-        }
-
-        // Update phase based on health
+        if (this.damageFlash > 0) this.damageFlash -= deltaTime * 3;
         this.updatePhase();
     }
 
-    /**
-     * Boss entrance animation
-     */
-    updateEntering(deltaTime) {
-        // Move down to target position
-        const distance = this.targetY - this.position.y;
-
-        if (Math.abs(distance) > 5) {
-            this.position.y += this.speed * deltaTime;
+    updateEntering(dt) {
+        if (Math.abs(this.targetY - this.position.y) > 5) {
+            this.position.y += this.speed * dt;
         } else {
             this.position.y = this.targetY;
             this.state = 'fighting';
         }
     }
 
-    /**
-     * Main fighting behavior
-     */
-    updateFighting(deltaTime, playerPosition) {
-        // Horizontal movement
-        this.moveTimer += deltaTime;
+    updateFighting(dt, playerPosition) {
+        this.moveTimer += dt;
         if (this.moveTimer >= this.moveDuration) {
             this.moveTimer = 0;
             this.pickNewTarget();
         }
 
-        // Move towards target
         const dx = this.targetX - this.position.x;
-        if (Math.abs(dx) > 5) {
-            this.position.x += Math.sign(dx) * this.speed * deltaTime;
-        }
+        if (Math.abs(dx) > 5) this.position.x += Math.sign(dx) * this.speed * dt;
 
-        // Keep in bounds
-        if (this.position.x < this.width / 2 + 20) {
-            this.position.x = this.width / 2 + 20;
-        }
-        if (this.position.x > CANVAS.WIDTH - this.width / 2 - 20) {
-            this.position.x = CANVAS.WIDTH - this.width / 2 - 20;
-        }
+        const margin = this.width / 2 + 20;
+        this.position.x = Math.max(margin, Math.min(CANVAS.WIDTH - margin, this.position.x));
 
-        // Update attack cooldown
-        this.attackTimer += deltaTime;
+        this.attackTimer += dt;
     }
 
-    /**
-     * Death animation
-     */
-    updateDefeated(deltaTime) {
-        // Shake and fade
+    updateDefeated() {
         this.shakeOffset.x = (Math.random() - 0.5) * 10;
         this.shakeOffset.y = (Math.random() - 0.5) * 10;
-
-        // Will be destroyed by game after explosion effects
     }
 
-    /**
-     * Pick a new horizontal movement target
-     */
     pickNewTarget() {
-        const margin = this.width / 2 + 50;
-        this.targetX = margin + Math.random() * (CANVAS.WIDTH - margin * 2);
+        const margin   = this.width / 2 + 50;
+        this.targetX   = margin + Math.random() * (CANVAS.WIDTH - margin * 2);
     }
 
-    /**
-     * Update attack phase based on health
-     */
     updatePhase() {
-        const healthPercent = (this.health / this.maxHealth) * 100;
-
+        const hp = (this.health / this.maxHealth) * 100;
         for (let i = BOSS.PHASES.length - 1; i >= 0; i--) {
-            if (healthPercent <= BOSS.PHASES[i].healthPercent) {
+            if (hp <= BOSS.PHASES[i].healthPercent) {
                 if (this.phase !== i) {
                     this.phase = i;
                     this.currentPattern = BOSS.PHASES[i].pattern;
@@ -162,236 +101,133 @@ export class Boss extends Entity {
         }
     }
 
-    /**
-     * Check if boss can attack
-     */
-    canAttack() {
-        return this.state === 'fighting' && this.attackTimer >= this.attackCooldown;
-    }
+    canAttack() { return this.state === 'fighting' && this.attackTimer >= this.attackCooldown; }
+    attack() { this.attackTimer = 0; }
 
-    /**
-     * Reset attack timer after attacking
-     */
-    attack() {
-        this.attackTimer = 0;
-    }
-
-    /**
-     * Get bullet spawn data based on current pattern
-     */
     getAttackPattern(playerPosition) {
         const bullets = [];
-        const baseY = this.position.y + this.height / 2;
+        const baseY   = this.position.y + this.height / 2;
 
         switch (this.currentPattern) {
-            case 'spread':
-                // Spread shot (5-7 bullets in arc)
-                const spreadCount = 5 + this.phase;
-                const spreadAngle = Math.PI * 0.4;
-                for (let i = 0; i < spreadCount; i++) {
-                    const angle = Math.PI / 2 - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
-                    bullets.push({
-                        x: this.position.x,
-                        y: baseY,
-                        angle: angle,
-                        speed: 200 + this.phase * 30
-                    });
+            case 'spread': {
+                const cnt    = 5 + this.phase;
+                const spread = Math.PI * 0.4;
+                for (let i = 0; i < cnt; i++) {
+                    const a = Math.PI / 2 - spread / 2 + (spread / (cnt - 1)) * i;
+                    bullets.push({ x: this.position.x, y: baseY, angle: a, speed: 200 + this.phase * 30 });
                 }
                 break;
-
-            case 'circle':
-                // Circular pattern (8-12 bullets)
-                const circleCount = 8 + this.phase * 2;
-                for (let i = 0; i < circleCount; i++) {
-                    const angle = (Math.PI * 2 / circleCount) * i + this.time;
-                    bullets.push({
-                        x: this.position.x,
-                        y: this.position.y,
-                        angle: angle,
-                        speed: 150 + this.phase * 20
-                    });
+            }
+            case 'circle': {
+                const cnt = 8 + this.phase * 2;
+                for (let i = 0; i < cnt; i++) {
+                    const a = (Math.PI * 2 / cnt) * i + this.time;
+                    bullets.push({ x: this.position.x, y: this.position.y, angle: a, speed: 150 + this.phase * 20 });
                 }
                 break;
-
-            case 'aimed':
-                // Aimed shots at player
+            }
+            case 'aimed': {
                 if (playerPosition) {
-                    const aimAngle = Vector2.angleBetween(this.position, playerPosition);
-
-                    // Main aimed shot
-                    bullets.push({
-                        x: this.position.x,
-                        y: baseY,
-                        angle: aimAngle,
-                        speed: 280
-                    });
-
-                    // Side shots
-                    bullets.push({
-                        x: this.position.x - 30,
-                        y: baseY,
-                        angle: aimAngle - 0.2,
-                        speed: 250
-                    });
-                    bullets.push({
-                        x: this.position.x + 30,
-                        y: baseY,
-                        angle: aimAngle + 0.2,
-                        speed: 250
-                    });
+                    const aim = Vector2.angleBetween(this.position, playerPosition);
+                    bullets.push({ x: this.position.x,      y: baseY, angle: aim,         speed: 280 });
+                    bullets.push({ x: this.position.x - 30, y: baseY, angle: aim - 0.2,   speed: 250 });
+                    bullets.push({ x: this.position.x + 30, y: baseY, angle: aim + 0.2,   speed: 250 });
                 }
                 break;
+            }
         }
-
         return bullets;
     }
 
-    /**
-     * Take damage
-     */
     takeDamage(amount) {
         if (this.state !== 'fighting') return false;
-
         this.health -= amount;
         this.damageFlash = 1;
-
         if (this.health <= 0) {
             this.health = 0;
-            this.state = 'defeated';
-            return true; // Destroyed
+            this.state  = 'defeated';
+            return true;
         }
         return false;
     }
 
-    /**
-     * Check if boss is active (not defeated)
-     */
-    isActive() {
-        return this.active && this.state !== 'defeated';
-    }
+    isActive()   { return this.active && this.state !== 'defeated'; }
+    isFighting() { return this.state === 'fighting'; }
+    getHealthPercent() { return this.health / this.maxHealth; }
 
-    /**
-     * Check if boss is in fighting state
-     */
-    isFighting() {
-        return this.state === 'fighting';
-    }
+    draw() {
+        if (!this.graphic) return;
+        const g  = this.graphic;
+        const px = this.position.x + this.shakeOffset.x;
+        const py = this.position.y + this.shakeOffset.y;
+        const w  = this.width;
+        const h  = this.height;
+        const fl = this.damageFlash > 0;
 
-    /**
-     * Get health percentage for UI
-     */
-    getHealthPercent() {
-        return this.health / this.maxHealth;
-    }
-
-    /**
-     * Render the boss
-     */
-    render(ctx) {
-        ctx.save();
-        ctx.translate(
-            this.position.x + this.shakeOffset.x,
-            this.position.y + this.shakeOffset.y
-        );
-
-        // Damage flash
-        if (this.damageFlash > 0) {
-            ctx.globalAlpha = 0.8;
-        }
-
-        // Draw boss body
-        this.renderBody(ctx);
-
-        // Draw health indicator on boss
-        this.renderHealthIndicator(ctx);
-
-        ctx.restore();
-    }
-
-    /**
-     * Render boss body
-     */
-    renderBody(ctx) {
-        const flash = this.damageFlash > 0;
+        g.setPosition(px, py);
+        g.clear();
 
         // Main body
-        ctx.fillStyle = flash ? '#ffffff' : this.color;
-        ctx.beginPath();
-        ctx.moveTo(0, -this.height / 2);
-        ctx.lineTo(-this.width / 2, this.height / 4);
-        ctx.lineTo(-this.width / 3, this.height / 2);
-        ctx.lineTo(this.width / 3, this.height / 2);
-        ctx.lineTo(this.width / 2, this.height / 4);
-        ctx.closePath();
-        ctx.fill();
+        g.fillStyle(fl ? 0xffffff : 0xcc0000, 1);
+        g.beginPath();
+        g.moveTo(0,      -h / 2);
+        g.lineTo(-w / 2,  h / 4);
+        g.lineTo(-w / 3,  h / 2);
+        g.lineTo( w / 3,  h / 2);
+        g.lineTo( w / 2,  h / 4);
+        g.closePath();
+        g.fillPath();
 
         // Wings
-        ctx.fillStyle = flash ? '#ffffff' : '#aa0000';
-        ctx.beginPath();
-        ctx.moveTo(-this.width / 3, 0);
-        ctx.lineTo(-this.width / 2 - 20, this.height / 3);
-        ctx.lineTo(-this.width / 2, this.height / 4);
-        ctx.closePath();
-        ctx.fill();
+        g.fillStyle(fl ? 0xffffff : 0xaa0000, 1);
+        g.beginPath();
+        g.moveTo(-w / 3,      0);
+        g.lineTo(-w / 2 - 18, h / 3);
+        g.lineTo(-w / 2,      h / 4);
+        g.closePath();
+        g.fillPath();
 
-        ctx.beginPath();
-        ctx.moveTo(this.width / 3, 0);
-        ctx.lineTo(this.width / 2 + 20, this.height / 3);
-        ctx.lineTo(this.width / 2, this.height / 4);
-        ctx.closePath();
-        ctx.fill();
+        g.beginPath();
+        g.moveTo( w / 3,      0);
+        g.lineTo( w / 2 + 18, h / 3);
+        g.lineTo( w / 2,      h / 4);
+        g.closePath();
+        g.fillPath();
 
         // Cockpit
-        ctx.fillStyle = flash ? '#ffffff' : '#330000';
-        ctx.beginPath();
-        ctx.ellipse(0, -this.height / 6, 15, 20, 0, 0, Math.PI * 2);
-        ctx.fill();
+        g.fillStyle(fl ? 0xffffff : 0x330000, 1);
+        g.fillEllipse(0, -h / 6, 30, 40);
 
-        // Eye (glows based on phase)
-        const eyeColors = ['#ffff00', '#ff8800', '#ff0000'];
-        ctx.fillStyle = eyeColors[this.phase] || '#ffff00';
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(0, -this.height / 6, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        // Phase eye
+        const eyeColors = [0xffff00, 0xff8800, 0xff0000];
+        const eyeColor  = eyeColors[this.phase] || 0xffff00;
+        g.fillStyle(eyeColor, 1);
+        g.fillCircle(0, -h / 6, 8);
+        // Eye glow ring
+        g.lineStyle(2, eyeColor, 0.5);
+        g.strokeCircle(0, -h / 6, 14);
 
         // Cannons
-        ctx.fillStyle = '#660000';
-        ctx.fillRect(-this.width / 2 - 5, this.height / 4, 15, 20);
-        ctx.fillRect(this.width / 2 - 10, this.height / 4, 15, 20);
+        g.fillStyle(0x660000, 1);
+        g.fillRect(-w / 2 - 5, h / 4,      14, 18);
+        g.fillRect( w / 2 - 9, h / 4,      14, 18);
 
         // Engine glow
-        const enginePulse = Math.sin(this.time * 10) * 0.3 + 0.7;
-        ctx.fillStyle = `rgba(255, 100, 0, ${enginePulse})`;
-        ctx.beginPath();
-        ctx.ellipse(-this.width / 4, this.height / 2 + 5, 8, 4, 0, 0, Math.PI * 2);
-        ctx.ellipse(this.width / 4, this.height / 2 + 5, 8, 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-    }
+        const pulse = Math.sin(this.time * 10) * 0.3 + 0.7;
+        g.fillStyle(0xff6400, pulse);
+        g.fillEllipse(-w / 4, h / 2 + 5, 16, 8);
+        g.fillEllipse( w / 4, h / 2 + 5, 16, 8);
 
-    /**
-     * Render small health indicator on boss
-     */
-    renderHealthIndicator(ctx) {
-        const barWidth = 60;
-        const barHeight = 6;
-        const y = -this.height / 2 - 15;
-
-        // Background
-        ctx.fillStyle = '#333';
-        ctx.fillRect(-barWidth / 2, y, barWidth, barHeight);
-
-        // Health fill
-        const healthPercent = this.health / this.maxHealth;
-        ctx.fillStyle = healthPercent > 0.5 ? '#00ff00' :
-            healthPercent > 0.25 ? '#ffff00' : '#ff0000';
-        ctx.fillRect(-barWidth / 2, y, barWidth * healthPercent, barHeight);
-
-        // Border
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(-barWidth / 2, y, barWidth, barHeight);
+        // Mini health bar
+        const barW = 60;
+        const barY = -h / 2 - 14;
+        g.fillStyle(0x333333, 1);
+        g.fillRect(-barW / 2, barY, barW, 6);
+        const hp   = this.health / this.maxHealth;
+        const hpC  = hp > 0.5 ? 0x00ff00 : hp > 0.25 ? 0xffff00 : 0xff0000;
+        g.fillStyle(hpC, 1);
+        g.fillRect(-barW / 2, barY, barW * hp, 6);
+        g.lineStyle(1, 0xffffff, 0.8);
+        g.strokeRect(-barW / 2, barY, barW, 6);
     }
 }
